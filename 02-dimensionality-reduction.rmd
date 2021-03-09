@@ -178,6 +178,11 @@ legend(-95, 50, legend=c("ESC", "preimp", "PGC", "soma"), col=c("red", "black", 
 
 From the plot, we can see PCA has done a reasonable job of separating out various cells. For example, a cluster of PGCs appears at the top of the plot, with somatic cells towards the lower right hand side. Pre-implantation embryos and ESCs appear to cluster together: perhaps this is not surprising as ESCs are derived from blastocyst cells. Loosely, we can interpret PC1 as dividing pre-implantation cells from somatic cells, with PC2 separating out PGCs.
 
+```{r echo=T}
+variance_explained = pcaresult$sdev^2
+barplot((variance_explained[1:15] / sum(variance_explained))*100, names.arg=seq(1,15), ylab="% variance")
+```
+
 Previously we used PCA to reduce the dimensionality of our data from thousands of genes down to two principle components. By eye, PCA appeared to do a reasonable job separating out different cell types. A useful next step might therefore be to perform clustering on the reduced dimensional space. We will go into more details about clusterin in subsequent sections, but for now we will simply use clustering as a tool for seperating out our datasets. We can run k-means clustering on a matrix using:
 
 ```{r echo=T}
@@ -360,8 +365,47 @@ In earlier sections we used PCA to analyse scRNA-seq datasets of early human emb
 
 Excercise 2.5. Load in the single cell dataset and run tSNE. How do pre-implantation cells look in tSNE? 
 
+```{r echo=T}
+D <- read.csv(file = "data/PGC_transcriptomics/PGC_transcriptomics.csv", header = TRUE, sep = ",", row.names=1)
+genenames <- rownames(D)
+genenames <- genenames[4:nrow(D)]
+genedata <- t(D[4:nrow(D),1:ncol(D)])
+```
+
+```{r echo=T}
+tsne_model <- Rtsne(genedata, check_duplicates=FALSE, pca=TRUE, perplexity=50, theta=0.5, dims=2)
+y1 <- tsne_model$Y[which(D[1,]==-1),1:2]
+y2 <- tsne_model$Y[which(D[1,]==0),1:2]
+y3 <- tsne_model$Y[which(D[1,]==1),1:2]
+y4 <- tsne_model$Y[which(D[1,]==2),1:2]
+
+plot(y1,type="p",col="red",xlim=c(-25, 25),ylim=c(-25, 25))
+points(y2,type="p",col="black")
+points(y3,type="p",col="blue")
+points(y4,type="p",col="green")
+legend(-20, 10, legend=c("ESC", "preimp", "PGC", "soma"), col=c("red", "black", "blue", "green"), pch="o", bty="n", cex=0.8)
+```
+
 Excercise 2.6. Note that cells labelled as pre-implantation actually consists of a variety of cells, from oocytes through to blastocyst stage. Take a look at the pre-implantation cells only using tSNE. Hint: a more refined categorisation of the developmental stage of pre-implantation cells can be found by looking at the developmental time variable (0=oocyte, 1=zygote, 2=2C, 3=4C, 4=8C, 5=Morula, 6=blastocyst). Try plotting the data from tSNE colouring the data according to developmental stage.
 
+```{r echo=T}
+y2_0 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==0),1:2]
+y2_1 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==1),1:2]
+y2_2 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==2),1:2]
+y2_3 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==3),1:2]
+y2_4 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==4),1:2]
+y2_5 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==5),1:2]
+y2_6 <- tsne_model_1$Y[which(D[1,]==0 & D[3,]==6),1:2]
+
+plot(y2_0,type="p",col="tomato",xlim=c(-20, 20),ylim=c(-10, 10))
+points(y2_2,type="p",col="tomato")
+points(y2_2,type="p",col="tomato1")
+points(y2_3,type="p",col="tomato1")
+points(y2_4,type="p",col="tomato2")
+points(y2_5,type="p",col="tomato3")
+points(y2_6,type="p",col="tomato4")
+legend(-10, 10, legend=c("Ooc", "Zyg", "2C", "4C","8C","Mor","Blast"), col=c("tomato", "tomato", "tomato1", "tomato1", "tomato2","tomato3","tomato4"),pch="o", bty="n", cex=0.8)
+```
 
 ## Other dimensionality reduction techniques
 
